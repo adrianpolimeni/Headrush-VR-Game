@@ -1,0 +1,2 @@
+C:\Users\jpoli\VR_Example\obj\Debug\Assembly-CSharp.csprojAssemblyReference.cache
+C:\Users\jpoli\VR_Example\obj\Debug\Assembly-CSharp.csproj.CoreCompileInputs.cache
