@@ -4,41 +4,54 @@ using UnityEngine;
 
 public class Spawner : MonoBehaviour
 {
+    public GameObject Enemy; // Prefab
+    public static GameObject Player;
+    List<GameObject> Enemies;
+    float distanceBetween;
+    public float minZ, maxZ;
+    private float zPos = 0;
+    int stride = 1;
+    public int minEnemy = 15;
+    int xIndex = 0;
+    int[] xPos;
 
-    public GameObject Prefab;
-    public SpawnMode mode;
-    public string input;
-   
-    public float period = 0.1f;
-
-    // Start is called before the first frame update
     void Start()
     {
-        if (mode == SpawnMode.Once)
+        distanceBetween = (maxZ - minZ) / (float)(minEnemy - 1);
+        Enemies = new List<GameObject>();
+        xPos = new int[minEnemy];
+        for (int i = 0; i < minEnemy; i++)
         {
-            Instantiate(Prefab, transform);
+            if (i < 10)
+            {
+                xPos[i] = Random.Range(0, 9);
+            }
+            else if (i == 10)
+            {
+                xIndex = Random.Range(0, 10);
+                zPos = distanceBetween * (float)xIndex;
+                stride = 3;
+            }
+
+            SpawnEnemy();
         }
+
+        Player = GameObject.FindGameObjectWithTag("Player");
     }
 
-    // Update is called once per frame
-    private float nextActionTime = 0.0f;
-    void Update()
+    public GameObject SpawnEnemy()
     {
-        if ((mode == SpawnMode.Timer) && Time.time > nextActionTime)
-        {
-            nextActionTime += period;
-            Instantiate(Prefab, transform);
-        }
-        if (mode == SpawnMode.OnTrigger && Input.GetButtonDown(input))
-        {
-            Instantiate(Prefab, transform);
-        }
+        var enemy = Instantiate(Enemy, RandomPoint(), Quaternion.identity);
+        Enemies.Add(enemy);
+        return enemy;
     }
-
-}
-
-public enum SpawnMode {
-    Once,
-    Timer,
-    OnTrigger
+    private Vector3 RandomPoint()
+    {
+        float rX = -4.5f + (float)(xPos[xIndex % 10] % 9);
+        var temp = new Vector3(rX, 0f, (zPos % maxZ) + minZ);
+        zPos += distanceBetween * (float)stride;
+        xPos[xIndex % 10] += 4 + 3 * (xIndex % 2);
+        xIndex += stride;
+        return temp;
+    }
 }

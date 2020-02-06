@@ -764,13 +764,11 @@ public class LocomotionTeleport : MonoBehaviour
 	/// Note that warp transitions do not call this function and instead moves the game object 
 	/// during the transition time time.
 	/// </summary>
-	public void DoTeleport()
+	public void DoTeleport(Vector3 destPosition)
 	{
 		var character = LocomotionController.CharacterController;
 		var characterTransform = character.transform;
 		var destTransform = _teleportDestination.OrientationIndicator;
-
-		Vector3 destPosition = destTransform.position;
 		destPosition.y += character.height * 0.5f;
 		Quaternion destRotation = _teleportDestination.LandingRotation;// destTransform.rotation;
 #if false

@@ -3,7 +3,10 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - PostProcessing
+  - MainManager
+  - Timer
   layers:
   - Default
   - TransparentFX
@@ -15,12 +18,12 @@ TagManager:
   - 
   - Ground
   - Grab
-  - Enemy
+  - EnemyBody
   - EnemyHead
   - Player
-  - 
-  - 
-  - 
+  - Enemy
+  - PostProcessing
+  - Screens
   - 
   - 
   - 

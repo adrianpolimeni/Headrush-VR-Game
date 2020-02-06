@@ -37,16 +37,6 @@ public class OVRGrabbable : MonoBehaviour
     protected bool m_grabbedKinematic = false;
     protected Collider m_grabbedCollider = null;
     protected OVRGrabber m_grabbedBy = null;
-    public Text text;
-    public Slider[] sliders;
-
-
-    public void setOffset() {
-        m_snapOffset.localPosition = new Vector3(sliders[0].value,sliders[1].value, sliders[2].value);
-        text.text = "" + sliders[0].value + ", " + sliders[1].value + ", " + sliders[2].value;
-    }
-
-
 
     /// <summary>
     /// If true, the object can currently be grabbed.

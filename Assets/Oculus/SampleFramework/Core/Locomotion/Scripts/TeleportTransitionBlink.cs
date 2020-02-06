@@ -64,7 +64,7 @@ public class TeleportTransitionBlink : TeleportTransition
 			if (!teleported && elapsedTime >= teleportTime)
 			{
 				teleported = true;
-				LocomotionTeleport.DoTeleport();
+				//LocomotionTeleport.DoTeleport();
 			}
 			//float fadeLevel = FadeLevels.Evaluate(elapsedTime / TransitionDuration);
 			//OVRInspector.instance.fader.SetFadeLevel(fadeLevel);

@@ -1,0 +1,4 @@
+#Wed Feb 05 23:35:21 CST 2020
+base.0=C\:\\Users\\jpoli\\Headrush\\Temp\\gradleOut\\build\\intermediates\\transforms\\dexMerger\\release\\0
+path.0=classes.dex
+renamed.0=classes.dex

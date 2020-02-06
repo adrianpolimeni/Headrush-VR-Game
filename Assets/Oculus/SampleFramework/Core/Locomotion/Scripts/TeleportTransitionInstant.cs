@@ -21,6 +21,6 @@ public class TeleportTransitionInstant : TeleportTransition
     /// </summary>
     protected override void LocomotionTeleportOnEnterStateTeleporting()
 	{
-		LocomotionTeleport.DoTeleport();
+		//LocomotionTeleport.DoTeleport();
 	}
 }

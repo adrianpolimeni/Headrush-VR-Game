@@ -1,104 +1,80 @@
-﻿ using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
-    
-
     Animator animator;
-    public float xVelocity, yVelocity;
-    private float speed = 0.02f;
+    private float xVelocity, yVelocity;
+    private float speed = 0.01f;
     private Transform transform;
-    public Transform Target;
+    GameObject Player;
     public float ShootingSkill, MovementSkill;
-    bool isReloading = false;
-    int clip = 8;
-    float t = 0;
+    public float AttackDistance = 20f; // Not zero 
     bool isMoving = false;
-    Vector3 StartPos, TargetPos;
-    float duration = 0;
+    bool isPassive = true;
+    public bool isAlive = true;
+    Vector3 InitPos;
+    Vector3 TargetPos;
+    public BlasterEnemy blaster;
+    public int health = 100;
 
     void Start()
     {
-        animator = GetComponent<Animator>();
         transform = GetComponent<Transform>();
-        animator.enabled = true;
+        animator = GetComponent<Animator>();
+        // Start animation at random times
+        AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(0);
+        animator.Play(state.fullPathHash, -1, Random.Range(0f, 1f));
+        MovementSkill = NextGaussian();
+        ShootingSkill = NextGaussian();
+        InitPos = transform.position;
+        Player = MainManager.Player;
         Ragdoll(false);
-        InvokeRepeating("AiMovement", 1f-MovementSkill, 2.0f);
-       // InvokeRepeating("AiShooting", 1f-ShootingSkill, Mathf.Lerp(0.2f,0.5f,1f-ShootingSkill));
-
     }
 
     void Update()
     {
-       UpdateMovement();
-       UpdateAnimation();
-       float temp = NextGaussian();
-      
-
+        if (isPassive && Vector3.Distance(Player.transform.position, transform.position) < AttackDistance && MainManager.GameStarted) {
+            isPassive = false;
+            
+            if (transform.position.z < 52.5f)
+                InvokeRepeating("AiMovement", Mathf.Lerp(0f, 3f, Random.value), 0.5f);
+            InvokeRepeating("AiShooting", Mathf.Lerp(0.5f, 2f, Random.value), 0.5f);
+        }
+        UpdateMovement();
+        UpdateAnimation();
     }
 
+    public void OnTriggerEnter(Collider other)
+    {
+        isMoving = false;
+        try
+        {
+            TargetPos = transform.position - other.transform.position;
+        }
+        catch (System.Exception e) { }
+    }
 
     void AiMovement()
     {
-        //float distance = (transform.position - TargetPos).magnitude;
-        //float curPos = Mathf.Lerp(0f, distance,);
-
-        if (!isMoving)
+        if (!isMoving && !isPassive && isAlive)
         {
             float r = Random.Range(0f, 1f);
             if (r < MovementSkill)
             { // Move Frequecy
                 TargetPos = RandomPosition();
-                StartPos = transform.position;
                 isMoving = true;
-
             }
         }
-
-
     }
 
     private Vector3 RandomPosition()
     {
-        float x = Random.Range(-10f, 10f);
+        float x = Random.Range(-5f, 5f);
         float y = 0f;
-        float z = Target.position.z + Mathf.Lerp(Random.Range(0f, 5f), Random.Range(10f, 15f),  1f - MovementSkill);
+        float z = InitPos.z + Mathf.Lerp(0f, Random.Range(-5f, 5f), MovementSkill);
         return new Vector3(x, y, z);
-    }
-
-
-    void AiShooting()
-    {
-        if (isReloading)
-            return;
-
-        float r = Random.Range(0f, 1f);
-        if (r < Mathf.Lerp(0.2f,1f,ShootingSkill)) { // Shoot Frequency
-            //Shoot
-            clip--;
-            if (clip == 0)
-                StartCoroutine(ReloadCoroutine());
-        }
-
-        
-    }
-
-    void Shoot()
-    {
-
-
-
-    }
-
-
-    IEnumerator ReloadCoroutine()
-    {
-        isReloading = true;
-        yield return new WaitForSeconds(Mathf.Lerp(1.5f,4f,1f-ShootingSkill));
-        clip = 8;
-        isReloading = false;
     }
 
     private float NextGaussian()
@@ -111,32 +87,40 @@ public class Enemy : MonoBehaviour
             gVal = Mathf.Sqrt(-2.0f * Mathf.Log(val1)) * Mathf.Sin(2.0f * Mathf.PI * val2);
         } while (Mathf.Abs(gVal) > 3f);
 
-        return (gVal+3f)/6f; // Return between 0-1
+        return (gVal + 3f) / 6f; // Return between 0-1
     }
+
+    void AiShooting()
+    {
+        if (!Player.GetComponent<Player>().isAlive || MainManager.GameFinished)
+            return;
+        float r = Random.Range(0f, 1f);
+        if (r < ShootingSkill) { // Shoot Frequency
+            blaster.Shoot();
+        }
+        float rangeFactor = 1f - (Vector3.Distance(transform.position, Player.transform.position) / AttackDistance); // 1 - 25
+        if ( ShootingSkill + rangeFactor > 2f * NextGaussian()) {
+            Player.GetComponent<Player>().OnShot();
+        }
+    }
+    
 
     private void UpdateMovement()
     {
-
-        Vector3 temp = Target.position;
+        Vector3 temp = Player.transform.position;
         temp[1] = 0f;
-        Target.position = temp;
-        transform.LookAt(Target);
+        Player.transform.position = temp;
+        transform.LookAt(Player.transform);
         
         if (isMoving)
         {
             Vector3 next = Vector3.MoveTowards(transform.position, TargetPos, speed);
-            Vector3 velocity = (next - transform.position);
+            Vector3 velocity = (next - transform.position); 
             float a = Vector3.Angle(transform.forward, new Vector3(0f, 0f, 1f));
             velocity = Quaternion.Euler(0f, a, 0f) * velocity;
-            Debug.Log(transform.forward);
-            
             transform.position = next;
-
             xVelocity = velocity.x/speed;
             yVelocity = velocity.z/speed;
-
-
-
             isMoving = (transform.position - TargetPos).magnitude > 0.1f;
         }
         else
@@ -144,41 +128,48 @@ public class Enemy : MonoBehaviour
            xVelocity /= 2f;
            yVelocity /= 2f;
         }
-        
-
-        /*
-        Vector3 moveDirection = new Vector3(xVelocity, 0.0f, yVelocity);
-        moveDirection *= speed;
-        transform.position += moveDirection;
-
-        if (transform.position.x > 1f) {
-            Debug.Log(Time.time);
-        }
-        */
-
-
-
-
     }
 
     private void UpdateAnimation() {
         animator.SetFloat("xVelocity", xVelocity);
         animator.SetFloat("yVelocity", yVelocity);
+        animator.SetBool("isMoving", isMoving);
+        animator.SetBool("isPassive", isPassive);
     } 
 
     void Ragdoll(bool ragdoll)
     {
         Collider[] col = GetComponentsInChildren<Collider>();
         Rigidbody[] rb = GetComponentsInChildren<Rigidbody>();
-        for (int i = 0; i < col.Length; i++)
-        {
+        for(int i=0;i<rb.Length;i++)
             rb[i].isKinematic = !ragdoll;
+
+        for (int i = 0; i < col.Length; i++)
+        { 
+            if (col[i].isTrigger)
+                continue;
             for (int j = 0; j < col.Length; j++)
-            {
                 if (i != j)
                     Physics.IgnoreCollision(col[i], col[j], ragdoll);
-            }
         }
         animator.enabled = !ragdoll;
+        CancelInvoke();
+    }
+
+    void OnHit(RaycastHit hit) {
+        health -= 40;
+        if (health < 0f) {
+            Ragdoll(true);
+            isAlive = false;
+            hit.rigidbody.AddForce(transform.TransformDirection(Vector3.forward) * 30f, ForceMode.Impulse);
+        }
+    }
+
+    void OnHeadHit()
+    {
+        Player.GetComponent<Player>().Health = health; // Set player's health to droids health
+        transform.position = Player.transform.position;
+        Ragdoll(true);
+        isAlive = false;
     }
 }
