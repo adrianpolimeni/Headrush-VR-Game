@@ -15,7 +15,7 @@ After cloning the repository:
 The goal of the game is to reach the other end of the rooftop as fast as possible. The player wields a blaster that can hack into enemy droids (similar to the ['shift' mechanic/ability](https://youtu.be/bI3CPh7vidg?t=85) in the Driver: San Francisco game). However, this only works with a shot to the head. Jump from droid to droid to get to the finish. Vision becomes more red as the player takes more damage. Health can be restored by hacking into a healthy droid.
 
 ### Demo ###
-Check out gameplay footage: [Youtube link](https://youtu.be/HBu7PsjabS8).
+Check out gameplay footage: [Youtube link](https://youtu.be/HBu7PsjabS8)
 
 ### Screen Shots ###
 ![InitialView](./Screenshots/InitialView.jpg)
