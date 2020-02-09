@@ -6,7 +6,7 @@ public class Enemy : MonoBehaviour
 {
     Animator animator;
     private float xVelocity, yVelocity;
-    private float speed = 0.01f;
+    private float speed = 0.05f;
     private Transform transform;
     GameObject Player;
     public float ShootingSkill, MovementSkill;
@@ -167,7 +167,12 @@ public class Enemy : MonoBehaviour
 
     void OnHeadHit()
     {
-        Player.GetComponent<Player>().Health = health; // Set player's health to droids health
+        if (!isAlive)
+            return;
+        Player p = Player.GetComponent<Player>();
+        // Set player's health to droids health
+        p.Health = health;
+        p.MoveTo(transform.position); 
         transform.position = Player.transform.position;
         Ragdoll(true);
         isAlive = false;

@@ -9,23 +9,26 @@ public class BlasterPlayer : Blaster
 {
     public ParticleSystem CylinderSteam;
     public LayerMask EnemyLayer, HeadLayer, UILayer;
-    public GameObject bulletHit;
+    public GameObject BulletHit;
     Text clipText;
     Canvas HUD;
     OVRGrabbable grab;
-    Player Player;
+    Player player;
     LineRenderer laser;
-    RectTransform[] TransformUI;
+    RectTransform[] transformUI;
+    Rigidbody rigidbody;
     void Start()
     {
         animator = GetComponent<Animator>();
         grab = GetComponent<OVRGrabbable>();
         audio = GetComponent<AudioSource>();
-        Player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
+        player = GameObject.FindGameObjectWithTag("Player").GetComponent<Player>();
         laser = GetComponentInChildren<LineRenderer>();
         clipText = GetComponentsInChildren<Text>()[0];
         HUD = GetComponentInChildren<Canvas>();
-        TransformUI = HUD.GetComponentsInChildren<RectTransform>();
+        transformUI = HUD.GetComponentsInChildren<RectTransform>();
+        rigidbody = GetComponent<Rigidbody>();
+        rigidbody.constraints = RigidbodyConstraints.FreezeAll;
     }
 
     void Update()
@@ -34,12 +37,12 @@ public class BlasterPlayer : Blaster
 
         if (CheckGrabbed())
             CheckTrigger();
-        Vector2 drawHealth = new Vector2((float)Player.Health, 15f); 
-        TransformUI[2].sizeDelta = drawHealth;
-        TransformUI[3].sizeDelta = drawHealth;
+        Vector2 drawHealth = new Vector2((float)player.Health, 15f); 
+        transformUI[2].sizeDelta = drawHealth;
+        transformUI[3].sizeDelta = drawHealth;
         if (MainManager.GameFinished && OVRInput.GetDown(OVRInput.Button.One))
         {
-            Player.TriggerRestart();
+            player.TriggerRestart();
         }
 
         // Secret HighScore Reset
@@ -47,7 +50,7 @@ public class BlasterPlayer : Blaster
             OVRInput.GetDown(OVRInput.Button.Three) &&
             OVRInput.GetDown(OVRInput.Button.Four)) {
             PlayerPrefs.SetFloat("Time", 0f);
-            Player.TriggerRestart();
+            player.TriggerRestart();
         }
     }
 
@@ -70,7 +73,8 @@ public class BlasterPlayer : Blaster
         if (grab != null && grab.isGrabbed)
         {
             HUD.enabled = true;
-            if(!MainManager.GameStarted)
+            rigidbody.constraints = RigidbodyConstraints.None;
+            if (!MainManager.GameStarted)
                 MainManager.UI.PlayStart();
             return true;
         }
@@ -97,7 +101,7 @@ public class BlasterPlayer : Blaster
 
     void CheckTrigger()
     {
-        if ((OVRInput.GetDown(OVRInput.Button.SecondaryIndexTrigger) && !isReloading && MainManager.GameStarted && Player.isAlive))
+        if ((OVRInput.GetDown(OVRInput.Button.SecondaryIndexTrigger) && !isReloading && MainManager.GameStarted && player.isAlive))
         {
             if (clip != 0)
                 Shoot();
@@ -126,33 +130,23 @@ public class BlasterPlayer : Blaster
         RaycastHit hit;
         if (Physics.Raycast(barrelLocation.position, barrelLocation.TransformDirection(Vector3.forward), out hit, Mathf.Infinity, HeadLayer))
         {
-            HeadHit(hit);
+            player.PlaySound(0);
+            hit.collider.gameObject.layer = EnemyLayer;
+            hit.transform.SendMessageUpwards("OnHeadHit");
         }
         else if (Physics.Raycast(barrelLocation.position, barrelLocation.TransformDirection(Vector3.forward), out hit, Mathf.Infinity, EnemyLayer))
         {
-            EnemyHit(hit);
+            hit.transform.SendMessageUpwards("OnHit", hit);
+            player.PlaySound(1);
         }
         else if (Physics.Raycast(barrelLocation.position, barrelLocation.TransformDirection(Vector3.forward), out hit, Mathf.Infinity, UILayer))
         {
-            Instantiate(bulletHit, hit.point, hit.transform.rotation);
             Image img = hit.transform.gameObject.GetComponentInChildren<Image>();
-            Player.PlaySound(2);
+            player.PlaySound(2);
             if (img != null)
                 img.color = new Color(1f, 1f, 1f, 1f);
         }
-    }
-    private void EnemyHit(RaycastHit hit)
-    {
-        hit.transform.SendMessageUpwards("OnHit", hit);
-        Player.PlaySound(1);
-        Instantiate(bulletHit, hit.point, hit.transform.rotation);
-    }
-
-    private void HeadHit(RaycastHit hit) {
-        Player.MoveTo(hit.point);
-        Player.PlaySound(0);
-        hit.collider.gameObject.layer = EnemyLayer;
-        hit.transform.SendMessageUpwards("OnHeadHit");
+        Instantiate(BulletHit, hit.point, hit.transform.rotation);
     }
 
     private IEnumerator ReloadCoroutine(float reloadTime)
