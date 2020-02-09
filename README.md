@@ -1,6 +1,6 @@
 # Headrush
 
-HeadRush is a time-trial/shooter VR game developed for the Oculus Quest. This 
+HeadRush is a time-trial/shooter VR game developed for the Oculus Quest.
 
 ### Build Instructions ###
 After cloning the repository:
